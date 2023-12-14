@@ -40,7 +40,7 @@ public partial class MainWindow : Window
         _timer.Tick += MoveSnowflakes;
         _timer.Start();
 
-        for (int i = 0; i < SnowflakeCount; i++)
+        for (var i = 0; i < SnowflakeCount; i++)
         {
             CreateSnowflake();
         }
@@ -48,7 +48,7 @@ public partial class MainWindow : Window
 
     private void CreateSnowflake()
     {
-        double size = _random.NextDouble() * (15.0 - 5.0) + 5.0;
+        var size = _random.NextDouble() * (15.0 - 5.0) + 5.0;
         var snowflake = new Ellipse
         {
             Width = size,

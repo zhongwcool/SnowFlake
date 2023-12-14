@@ -5,15 +5,16 @@
         <TargetFramework>net6.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <UseWPF>true</UseWPF>
+        <UseWPF>True</UseWPF>
+        <ApplicationIcon>Resources\ico_notify.ico</ApplicationIcon>
+        <UseWindowsForms>False</UseWindowsForms>
     </PropertyGroup>
 
     <ItemGroup>
-      <Page Update="Views\MainWindow.xaml">
-        <Generator>MSBuild:Compile</Generator>
-        <XamlRuntime>Wpf</XamlRuntime>
-        <SubType>Designer</SubType>
-      </Page>
+      <None Remove="Resources\ico_notify.ico" />
+      <Resource Include="Resources\ico_notify.ico" />
+      <None Remove="Resources\icon_main.png" />
+      <Resource Include="Resources\icon_main.png" />
     </ItemGroup>
 
 </Project>
