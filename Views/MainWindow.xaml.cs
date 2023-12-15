@@ -1,15 +1,17 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Interop;
-using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using SnowFlake.Models;
+using Application = System.Windows.Application;
 
 namespace SnowFlake.Views;
 
-public partial class MainWindow : Window
+public partial class MainWindow
 {
     private readonly List<Snowflake> _snowflakes = new();
     private readonly DispatcherTimer _timer = new();
@@ -24,6 +26,31 @@ public partial class MainWindow : Window
         // 设置窗口大小覆盖所有屏幕
         SetWindowToCoverAllScreens();
         InitializeSnowfall();
+        
+        // 创建托盘图标
+        _trayIcon = new NotifyIcon();
+        var iconStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/ico_notify.ico"))?.Stream;
+        _trayIcon.Icon = new Icon(iconStream!);
+        _trayIcon.Text = "SnowFlake";
+        _trayIcon.Visible = true;
+
+        // 可以添加一个右键菜单等
+        _trayIcon.ContextMenuStrip = new ContextMenuStrip();
+        _trayIcon.ContextMenuStrip.Items.Add("退出", null, OnTrayIconExitClicked);
+    }
+    
+    private readonly NotifyIcon _trayIcon;
+    
+    private void OnTrayIconExitClicked(object? sender, EventArgs e)
+    {
+        _trayIcon.Visible = false;
+        Application.Current.Shutdown();
+    }
+    
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        _trayIcon.Dispose();
     }
     
     private void SetWindowToCoverAllScreens()
@@ -53,7 +80,7 @@ public partial class MainWindow : Window
         {
             Width = size,
             Height = size,
-            Fill = Brushes.White
+            Fill = System.Windows.Media.Brushes.White
         };
 
         Canvas.SetLeft(snowflake, _random.NextDouble() * (this.Width - size));
@@ -87,10 +114,10 @@ public partial class MainWindow : Window
     
     // 导入 Windows API
     [DllImport("user32.dll")]
-    public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+    private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
     [DllImport("user32.dll")]
-    public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+    private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
     
     // 常量定义
     private const int GWL_EXSTYLE = -20;

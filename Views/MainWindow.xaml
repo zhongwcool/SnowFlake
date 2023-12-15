@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:SnowFlake"
         mc:Ignorable="d"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent" Topmost="True"
+        ShowInTaskbar="False"
         Title="Snow Flake">
     <Canvas x:Name="SnowCanvas" Background="#01000000"/>
 </Window>

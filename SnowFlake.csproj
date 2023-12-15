@@ -7,7 +7,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>True</UseWPF>
         <ApplicationIcon>Resources\ico_notify.ico</ApplicationIcon>
-        <UseWindowsForms>False</UseWindowsForms>
+		<UseWindowsForms>true</UseWindowsForms>
     </PropertyGroup>
 
     <ItemGroup>
