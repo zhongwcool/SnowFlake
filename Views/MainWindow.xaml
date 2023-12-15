@@ -8,5 +8,28 @@
         WindowStyle="None" AllowsTransparency="True" Background="Transparent" Topmost="True"
         ShowInTaskbar="False"
         Title="Snow Flake">
-    <Canvas x:Name="SnowCanvas" Background="#01000000"/>
+    <Grid>
+        <Canvas x:Name="SnowCanvas" Background="#01000000"/>
+        
+        <Path Data="{StaticResource IconTest}" Fill="White" RenderTransformOrigin="0.5,1"
+              VerticalAlignment="Bottom" HorizontalAlignment="Left"
+              Stretch="Fill" Width="80" Height="80" Margin="20,0,0,0">
+            <Path.RenderTransform>
+                <RotateTransform x:Name="MyRotateTransform" />
+            </Path.RenderTransform>
+            <Path.Triggers>
+                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                    <BeginStoryboard>
+                        <Storyboard RepeatBehavior="Forever">
+                            <DoubleAnimation
+                                Storyboard.TargetProperty="Angle"
+                                Storyboard.TargetName="MyRotateTransform"
+                                From="-10" To="10" Duration="0:0:1"
+                                AutoReverse="True" />
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Path.Triggers>
+        </Path>
+    </Grid>
 </Window>
