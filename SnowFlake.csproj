@@ -13,8 +13,6 @@
     <ItemGroup>
       <None Remove="Resources\ico_notify.ico" />
       <Resource Include="Resources\ico_notify.ico" />
-      <None Remove="Resources\icon_main.png" />
-      <Resource Include="Resources\icon_main.png" />
     </ItemGroup>
 
 </Project>
