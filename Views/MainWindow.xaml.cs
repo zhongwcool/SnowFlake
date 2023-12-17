@@ -1,8 +1,6 @@
-﻿using System.Drawing;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
 using System.Windows.Interop;
 using System.Windows.Shapes;
 using System.Windows.Threading;
@@ -26,31 +24,11 @@ public partial class MainWindow
         // 设置窗口大小覆盖所有屏幕
         SetWindowToCoverAllScreens();
         InitializeSnowfall();
-        
-        // 创建托盘图标
-        _trayIcon = new NotifyIcon();
-        var iconStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/ico_notify.ico"))?.Stream;
-        _trayIcon.Icon = new Icon(iconStream!);
-        _trayIcon.Text = "SnowFlake";
-        _trayIcon.Visible = true;
 
-        // 可以添加一个右键菜单等
-        _trayIcon.ContextMenuStrip = new ContextMenuStrip();
-        _trayIcon.ContextMenuStrip.Items.Add("退出", null, OnTrayIconExitClicked);
-    }
-    
-    private readonly NotifyIcon _trayIcon;
-    
-    private void OnTrayIconExitClicked(object? sender, EventArgs e)
-    {
-        _trayIcon.Visible = false;
-        Application.Current.Shutdown();
-    }
-    
-    protected override void OnClosed(EventArgs e)
-    {
-        base.OnClosed(e);
-        _trayIcon.Dispose();
+        // 设置托盘图标
+        SetupNotifyIcon();
+        // 摆放雪人
+        PlaceTheSnowman();
     }
     
     private void SetWindowToCoverAllScreens()
@@ -112,6 +90,8 @@ public partial class MainWindow
         }
     }
     
+    #region 鼠标穿透
+    
     // 导入 Windows API
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
@@ -130,4 +110,71 @@ public partial class MainWindow
         // 设置窗口样式为透明
         SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
     }
+    
+    #endregion
+    
+    #region 托盘功能区
+
+    private void SetupNotifyIcon()
+    {
+        // 创建托盘图标
+        _trayIcon = new NotifyIcon();
+        var iconStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/ico_notify.ico"))?.Stream;
+        _trayIcon.Icon = new Icon(iconStream!);
+        _trayIcon.Text = "Let it snow";
+        _trayIcon.Visible = true;
+
+        // 可以添加一个右键菜单等
+        _trayIcon.ContextMenuStrip = new ContextMenuStrip();
+        _trayIcon.ContextMenuStrip.Items.Add("退出", null, OnTrayIconExitClicked);
+    }
+
+    private NotifyIcon _trayIcon;
+    
+    private void OnTrayIconExitClicked(object? sender, EventArgs e)
+    {
+        _trayIcon.Visible = false;
+        Application.Current.Shutdown();
+    }
+    
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        _trayIcon.Dispose();
+    }
+
+    #endregion
+
+    #region 获得任务栏高度以摆放雪人
+
+    private void PlaceTheSnowman()
+    {
+        // 获取任务栏高度，兼容多屏幕的情况
+        var taskBarHeight = GetTaskBarHeight();
+        SnowMan.Margin = new Thickness(20, 0, 20, taskBarHeight - 10);
+    }
+    
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref Rect pvParam, uint fWinIni);
+
+    private const uint SpiGetWorkArea = 0x0030;
+
+    private struct Rect
+    {
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
+        public int Left, Top, Right, Bottom;
+#pragma warning restore CS0649 // Field is never assigned to, and will always have its default value
+    }
+
+    private static int GetTaskBarHeight()
+    {
+        var rect = new Rect();
+        if (!SystemParametersInfo(SpiGetWorkArea, 0, ref rect, 0)) return 0;
+        var screenHeight = Screen.PrimaryScreen.Bounds.Height;
+        var taskBarHeight = screenHeight - rect.Bottom;
+        return taskBarHeight;
+    }
+
+    #endregion
 }
