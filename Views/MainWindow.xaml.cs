@@ -132,6 +132,13 @@ public partial class MainWindow
         // 可以添加一个右键菜单等
         _trayIcon.ContextMenuStrip = new ContextMenuStrip();
         _trayIcon.ContextMenuStrip.Items.Add("退出", null, OnTrayIconExitClicked);
+        _trayIcon.ContextMenuStrip.Items.Add("反馈", null, OnTrayIconTouchClicked);
+    }
+
+    private static void OnTrayIconTouchClicked(object? sender, EventArgs e)
+    {
+        var window = new FeedbackWindow();
+        window.ShowDialog();
     }
 
     private NotifyIcon _trayIcon;
