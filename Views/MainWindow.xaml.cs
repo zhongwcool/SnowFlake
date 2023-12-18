@@ -5,6 +5,7 @@ using System.Windows.Interop;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 using SnowFlake.Models;
+using SnowFlake.Utils;
 using Application = System.Windows.Application;
 
 namespace SnowFlake.Views;
@@ -15,11 +16,14 @@ public partial class MainWindow
     private readonly DispatcherTimer _timer = new();
     private const int SnowflakeCount = 100;
     private readonly Random _random = new();
+    private readonly double _scaleFactor;
 
     public MainWindow()
     {
         InitializeComponent();
         SourceInitialized += MainWindow_SourceInitialized;
+        // 获取缩放比例，兼容高分屏
+        _scaleFactor = GetScaleFactor();
         
         // 设置窗口大小覆盖所有屏幕
         SetWindowToCoverAllScreens();
@@ -54,6 +58,7 @@ public partial class MainWindow
     private void CreateSnowflake()
     {
         var size = _random.NextDouble() * (15.0 - 5.0) + 5.0;
+        size *= _scaleFactor;
         var snowflake = new Ellipse
         {
             Width = size,
@@ -146,12 +151,19 @@ public partial class MainWindow
     #endregion
 
     #region 获得任务栏高度以摆放雪人
+    
+    private double GetScaleFactor()
+    {
+        var (dpiX, dpiY) = DpiUtil.GetDpi(this);
+        var scaleFactor = dpiX / 96; // 96 DPI is the standard DPI for Windows
+        return scaleFactor;
+    }
 
     private void PlaceTheSnowman()
     {
         // 获取任务栏高度，兼容多屏幕的情况
         var taskBarHeight = GetTaskBarHeight();
-        SnowMan.Margin = new Thickness(20, 0, 20, taskBarHeight - 10);
+        SnowMan.Margin = new Thickness(20, 0, 20, taskBarHeight - 10 * (_scaleFactor - 1));
     }
     
     [DllImport("user32.dll")]
