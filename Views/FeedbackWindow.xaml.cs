@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Mar.Cheese;
+using SnowFlake.Utils;
 using Clipboard = System.Windows.Clipboard;
 using DataFormats = System.Windows.DataFormats;
 using MessageBox = System.Windows.MessageBox;
@@ -16,6 +17,15 @@ public partial class FeedbackWindow : Window
     public FeedbackWindow()
     {
         InitializeComponent();
+
+        HttpUtil.GetFileContent("https://raw.githubusercontent.com/zhongwcool/SnowFlake/main/Assets/news.txt")
+            .ContinueWith(task =>
+            {
+                if (task.Result != null)
+                {
+                    Dispatcher.Invoke(() => TxtNews.Text = task.Result);
+                }
+            });
     }
 
     private void CopyToClipboard_Click(object sender, RoutedEventArgs e)
@@ -30,7 +40,7 @@ public partial class FeedbackWindow : Window
         var builder = new StringBuilder();
         builder.Append(TxtFeedback.Text);
         builder.Append(Environment.NewLine);
-        
+
         var task = SystemUtil.GetSystemInfo();
         task.ContinueWith(_ =>
         {
@@ -48,7 +58,7 @@ public partial class FeedbackWindow : Window
         var task = EmailUtil.SendEmail("2872700763@qq.com", to, subject, body,
             "smtp.qq.com", 587, "2872700763", "utyydjctjirrdfgc"
         );
-        
+
         task.ContinueWith(_ =>
         {
             if (task.Result)

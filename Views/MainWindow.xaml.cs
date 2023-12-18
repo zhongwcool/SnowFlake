@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -7,6 +8,7 @@ using System.Windows.Threading;
 using SnowFlake.Models;
 using SnowFlake.Utils;
 using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
 
 namespace SnowFlake.Views;
 
@@ -131,8 +133,16 @@ public partial class MainWindow
 
         // 可以添加一个右键菜单等
         _trayIcon.ContextMenuStrip = new ContextMenuStrip();
-        _trayIcon.ContextMenuStrip.Items.Add("退出", null, OnTrayIconExitClicked);
+        _trayIcon.ContextMenuStrip.Items.Add("关于", null, OnTrayIconAboutClicked);
         _trayIcon.ContextMenuStrip.Items.Add("反馈", null, OnTrayIconTouchClicked);
+        _trayIcon.ContextMenuStrip.Items.Add("退出", null, OnTrayIconExitClicked);
+    }
+
+    private void OnTrayIconAboutClicked(object sender, EventArgs e)
+    {
+        // 获取当前程序集的版本号
+        var version = Assembly.GetEntryAssembly()?.GetName().Version;
+        MessageBox.Show($"版本：v{version}");
     }
 
     private static void OnTrayIconTouchClicked(object? sender, EventArgs e)

@@ -19,7 +19,7 @@
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Grid.Row="0">
             <Path Data="{StaticResource IconAnnounce}" Fill="#AAA" Margin="5" />
-            <TextBlock Text="希望带给大家一点欢乐" FontFamily="Segoe UI" VerticalAlignment="Center" Margin="5" />
+            <TextBlock x:Name="TxtNews" Text="希望带给大家一点欢乐" FontFamily="Segoe UI" VerticalAlignment="Center" Margin="5" />
         </StackPanel>
         <Border Height="1" Background="#555" HorizontalAlignment="Stretch" Margin="5" Grid.Row="1" />
 
@@ -35,7 +35,7 @@
         </Grid>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Row="3">
-            <Button x:Name="BtnSubmit" Content="发送" Margin="5" Click="EmailSupport_Click"
+            <Button x:Name="BtnSubmit" Content="发送" Margin="5" Click="EmailSupport_Click" IsEnabled="False"
                     Style="{StaticResource ModernButton}"/>
         </StackPanel>
     </Grid>
