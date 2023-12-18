@@ -18,25 +18,32 @@ public partial class MainWindow
     private readonly DispatcherTimer _timer = new();
     private const int SnowflakeCount = 100;
     private readonly Random _random = new();
-    private readonly double _scaleFactor;
+    private float _scaleFactor;
 
     public MainWindow()
     {
         InitializeComponent();
+        Loaded += MainWindow_Loaded;
         SourceInitialized += MainWindow_SourceInitialized;
-        // 获取缩放比例，兼容高分屏
-        _scaleFactor = GetScaleFactor();
         
         // 设置窗口大小覆盖所有屏幕
         SetWindowToCoverAllScreens();
-        InitializeSnowfall();
 
         // 设置托盘图标
         SetupNotifyIcon();
+    }
+
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        var (dpiX, dpiY) = DpiUtil.GetDpi(this);
+        _scaleFactor = (float)dpiX / 96.0f; // 96 DPI is the standard DPI for Windows
+        
+        // 初始化雪花
+        InitializeSnowfall();
         // 摆放雪人
         PlaceTheSnowman();
     }
-    
+
     private void SetWindowToCoverAllScreens()
     {
         Left = SystemParameters.VirtualScreenLeft;
@@ -169,18 +176,11 @@ public partial class MainWindow
 
     #region 获得任务栏高度以摆放雪人
     
-    private double GetScaleFactor()
-    {
-        var (dpiX, dpiY) = DpiUtil.GetDpi(this);
-        var scaleFactor = dpiX / 96; // 96 DPI is the standard DPI for Windows
-        return scaleFactor;
-    }
-
     private void PlaceTheSnowman()
     {
         // 获取任务栏高度，兼容多屏幕的情况
         var taskBarHeight = GetTaskBarHeight();
-        SnowMan.Margin = new Thickness(20, 0, 20, taskBarHeight - 10 * (_scaleFactor - 1));
+        SnowMan.Margin = new Thickness(20, 0, 20, taskBarHeight / _scaleFactor);
     }
     
     [DllImport("user32.dll")]
