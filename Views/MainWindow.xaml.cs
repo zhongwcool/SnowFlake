@@ -1,14 +1,17 @@
-﻿using System.Reflection;
+﻿using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
-using System.Windows.Shapes;
+using System.Windows.Media;
 using System.Windows.Threading;
 using SnowFlake.Models;
 using SnowFlake.Utils;
 using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
+using Path = System.Windows.Shapes.Path;
+using Point = System.Windows.Point;
 
 namespace SnowFlake.Views;
 
@@ -30,7 +33,7 @@ public partial class MainWindow
         SetWindowToCoverAllScreens();
 
         // 设置托盘图标
-        SetupNotifyIcon();
+        InitializeTrayMenu();
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -66,13 +69,15 @@ public partial class MainWindow
 
     private void CreateSnowflake()
     {
-        var size = _random.NextDouble() * (15.0 - 5.0) + 5.0;
+        var size = _random.NextDouble() * (35.0 - 5.0) + 5.0;
         size *= _scaleFactor;
-        var snowflake = new Ellipse
+        var snowflake = new Path
         {
             Width = size,
-            Height = size,
-            Fill = System.Windows.Media.Brushes.White
+            Height = size + 3,
+            Fill = System.Windows.Media.Brushes.White,
+            Data = (Geometry)FindResource("IconSnow1"),
+            Stretch = Stretch.Fill
         };
 
         Canvas.SetLeft(snowflake, _random.NextDouble() * (this.Width - size));
@@ -81,7 +86,8 @@ public partial class MainWindow
         _snowflakes.Add(new Snowflake
         {
             Shape = snowflake,
-            Velocity = _random.NextDouble() * (5.0 - 2.0) + 2.0
+            Velocity = _random.NextDouble() * (5.0 - 2.0) + 2.0,
+            RtSpeed = _random.NextDouble() * (5.0 - 2.0) + 2.0
         });
 
         SnowCanvas.Children.Add(snowflake);
@@ -91,7 +97,7 @@ public partial class MainWindow
     {
         foreach (var snowflake in _snowflakes)
         {
-            double top = Canvas.GetTop(snowflake.Shape) + snowflake.Velocity;
+            var top = Canvas.GetTop(snowflake.Shape) + snowflake.Velocity;
             if (top > SnowCanvas.ActualHeight)
             {
                 Canvas.SetTop(snowflake.Shape, -snowflake.Shape.Height);
@@ -100,6 +106,17 @@ public partial class MainWindow
             else
             {
                 Canvas.SetTop(snowflake.Shape, top);
+            }
+            
+            // 旋转雪花
+            if (snowflake.Shape.RenderTransform is RotateTransform rotateTransform)
+            {
+                rotateTransform.Angle = (rotateTransform.Angle + snowflake.RtSpeed) % 360;
+            }
+            else
+            {
+                snowflake.Shape.RenderTransform = new RotateTransform(snowflake.RtSpeed);
+                snowflake.Shape.RenderTransformOrigin = new Point(0.5, 0.5); // 将旋转中心设置为形状的中心
             }
         }
     }
@@ -129,7 +146,8 @@ public partial class MainWindow
     
     #region 托盘功能区
 
-    private void SetupNotifyIcon()
+    // 初始化托盘菜单
+    private void InitializeTrayMenu()
     {
         // 创建托盘图标
         _trayIcon = new NotifyIcon();
@@ -137,19 +155,107 @@ public partial class MainWindow
         _trayIcon.Icon = new Icon(iconStream!);
         _trayIcon.Text = "Let it snow";
         _trayIcon.Visible = true;
+        
+        // 菜单-雪花样式
+        var trayMenu = new ContextMenuStrip();
+        var mainMenuItem = new ToolStripMenuItem("样式");
 
-        // 可以添加一个右键菜单等
-        _trayIcon.ContextMenuStrip = new ContextMenuStrip();
-        _trayIcon.ContextMenuStrip.Items.Add("关于", null, OnTrayIconAboutClicked);
-        _trayIcon.ContextMenuStrip.Items.Add("反馈", null, OnTrayIconTouchClicked);
-        _trayIcon.ContextMenuStrip.Items.Add("退出", null, OnTrayIconExitClicked);
+        // 创建二级菜单
+        _menuSnow = new ContextMenuStrip();
+        var subOption1 = new ToolStripMenuItem(_items[1]);
+        subOption1.CheckOnClick = true;
+        subOption1.Click += SubOption_Click;
+
+        var subOption2 = new ToolStripMenuItem(_items[2]);
+        subOption2.CheckOnClick = true;
+        subOption2.Click += SubOption_Click;
+        
+        var subOption3 = new ToolStripMenuItem(_items[3]);
+        subOption3.CheckOnClick = true;
+        subOption3.Click += SubOption_Click;
+        
+        var subOption4 = new ToolStripMenuItem(_items[4]);
+        subOption4.CheckOnClick = true;
+        subOption4.Click += SubOption_Click;
+        
+        var subOption0 = new ToolStripMenuItem(_items[0]);
+        subOption0.CheckOnClick = true;
+        subOption0.Click += SubOption_Click;
+
+        _menuSnow.Items.AddRange(new ToolStripItem[] { subOption0, subOption1, subOption2, subOption3, subOption4 });
+        mainMenuItem.DropDown = _menuSnow;
+
+        trayMenu.Items.Add(mainMenuItem);
+        
+        trayMenu.Items.Add("关于", null, OnTrayIconAboutClicked);
+        trayMenu.Items.Add("反馈", null, OnTrayIconTouchClicked);
+        trayMenu.Items.Add("退出", null, OnTrayIconExitClicked);
+
+        _trayIcon.ContextMenuStrip = trayMenu;
+        
+        var userChoice = ReadUserChoice();
+        if (string.IsNullOrEmpty(userChoice))
+        {
+            subOption0.Checked = true;
+        }
+        else
+        {
+            foreach (ToolStripMenuItem item in _menuSnow.Items)
+            {
+                if (item.Text == userChoice)
+                {
+                    item.Checked = true;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // 单选逻辑
+    private void SubOption_Click(object sender, EventArgs e)
+    {
+        // 处理UI
+        foreach (ToolStripMenuItem item in _menuSnow.Items)
+        {
+            item.Checked = false;
+        }
+
+        var clickedItem = (ToolStripMenuItem)sender;
+        clickedItem.Checked = true;
+        SaveUserChoice(clickedItem.Text);
+        
+        // 处理雪花
+        _selectedSnow = (Geometry)FindResource("IconSnow0");
+    }
+    
+    private Geometry _selectedSnow = new EllipseGeometry(new Point(50, 50), 40, 40); // 圆心(50,50) 半径40
+    private string[] _items = { "波点", "雪花1", "雪花2", "雪花3", "雪花4" };
+
+    // 保存用户选择
+    private static void SaveUserChoice(string choice)
+    {
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
+        Directory.CreateDirectory(myAppFolder);
+        File.WriteAllText(System.IO.Path.Combine(myAppFolder, "userChoice.txt"), choice);
+    }
+
+    // 读取用户选择
+    private static string ReadUserChoice()
+    {
+        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
+        var userChoicePath = System.IO.Path.Combine(myAppFolder, "userChoice.txt");
+
+        if (File.Exists(userChoicePath)) return File.ReadAllText(userChoicePath);
+        return null;
     }
 
     private void OnTrayIconAboutClicked(object sender, EventArgs e)
     {
         // 获取当前程序集的版本号
         var version = Assembly.GetEntryAssembly()?.GetName().Version;
-        MessageBox.Show($"版本：v{version}");
+        MessageBox.Show($"版本：{version}");
     }
 
     private static void OnTrayIconTouchClicked(object? sender, EventArgs e)
@@ -159,7 +265,8 @@ public partial class MainWindow
     }
 
     private NotifyIcon _trayIcon;
-    
+    private ContextMenuStrip _menuSnow;
+
     private void OnTrayIconExitClicked(object? sender, EventArgs e)
     {
         _trayIcon.Visible = false;

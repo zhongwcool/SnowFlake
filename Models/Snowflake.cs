@@ -4,6 +4,7 @@ namespace SnowFlake.Models;
 
 public class Snowflake
 {
-    public Ellipse Shape { get; set; }
+    public Path Shape { get; set; }
     public double Velocity { get; set; }
+    public double RtSpeed { get; set; } = 0;
 }
