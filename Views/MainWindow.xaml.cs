@@ -21,7 +21,7 @@ public partial class MainWindow
     private readonly DispatcherTimer _timer = new();
     private const int SnowflakeCount = 100;
     private readonly Random _random = new();
-    private float _scaleFactor;
+    private float _scaleFactor = 1.0f;
 
     public MainWindow()
     {
@@ -69,14 +69,14 @@ public partial class MainWindow
 
     private void CreateSnowflake()
     {
-        var size = _random.NextDouble() * (35.0 - 5.0) + 5.0;
+        var size = _random.NextDouble() * (_selectedScale - 5.0) + 5.0;
         size *= _scaleFactor;
         var snowflake = new Path
         {
             Width = size,
-            Height = size + 3,
+            Height = size + _selectedOffset,
             Fill = System.Windows.Media.Brushes.White,
-            Data = (Geometry)FindResource("IconSnow1"),
+            Data = _selectedSnow,
             Stretch = Stretch.Fill
         };
 
@@ -162,23 +162,23 @@ public partial class MainWindow
 
         // 创建二级菜单
         _menuSnow = new ContextMenuStrip();
-        var subOption1 = new ToolStripMenuItem(_items[1]);
+        var subOption1 = new ToolStripMenuItem(_snowShapes[1].Name);
         subOption1.CheckOnClick = true;
         subOption1.Click += SubOption_Click;
 
-        var subOption2 = new ToolStripMenuItem(_items[2]);
+        var subOption2 = new ToolStripMenuItem(_snowShapes[2].Name);
         subOption2.CheckOnClick = true;
         subOption2.Click += SubOption_Click;
         
-        var subOption3 = new ToolStripMenuItem(_items[3]);
+        var subOption3 = new ToolStripMenuItem(_snowShapes[3].Name);
         subOption3.CheckOnClick = true;
         subOption3.Click += SubOption_Click;
         
-        var subOption4 = new ToolStripMenuItem(_items[4]);
+        var subOption4 = new ToolStripMenuItem(_snowShapes[4].Name);
         subOption4.CheckOnClick = true;
         subOption4.Click += SubOption_Click;
         
-        var subOption0 = new ToolStripMenuItem(_items[0]);
+        var subOption0 = new ToolStripMenuItem(_snowShapes[0].Name);
         subOption0.CheckOnClick = true;
         subOption0.Click += SubOption_Click;
 
@@ -197,6 +197,7 @@ public partial class MainWindow
         if (string.IsNullOrEmpty(userChoice))
         {
             subOption0.Checked = true;
+            subOption0.PerformClick();
         }
         else
         {
@@ -205,6 +206,7 @@ public partial class MainWindow
                 if (item.Text == userChoice)
                 {
                     item.Checked = true;
+                    item.PerformClick();
                     break;
                 }
             }
@@ -224,13 +226,39 @@ public partial class MainWindow
         clickedItem.Checked = true;
         SaveUserChoice(clickedItem.Text);
         
-        // 处理雪花
-        _selectedSnow = (Geometry)FindResource("IconSnow0");
+        // 根据用户选择，更新雪花样式
+        foreach (var snowShape in _snowShapes)
+        {
+            if (snowShape.Name == clickedItem.Text)
+            {
+                _selectedSnow = (Geometry)FindResource(snowShape.Key);
+                _selectedOffset = snowShape.Offset;
+                _selectedScale = snowShape.Scale;
+                break;
+            }
+        }
+        
+        // 重新生成雪花
+        SnowCanvas.Children.Clear();
+        _snowflakes.Clear();
+        for (var i = 0; i < SnowflakeCount; i++)
+        {
+            CreateSnowflake();
+        }
     }
     
     private Geometry _selectedSnow = new EllipseGeometry(new Point(50, 50), 40, 40); // 圆心(50,50) 半径40
-    private string[] _items = { "波点", "雪花1", "雪花2", "雪花3", "雪花4" };
+    private double _selectedOffset = 5.0;
+    private double _selectedScale = 15.0;
 
+    private readonly SnowShape[] _snowShapes = {
+        new() { Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 15.0}, 
+        new() { Name = "雪花1", Key = "IconSnow1", Offset = 5.0, Scale = 35.0}, 
+        new() { Name = "雪花2", Key = "IconSnow2", Offset = 5.0, Scale = 35.0 }, 
+        new() { Name = "雪花3", Key = "IconSnow3", Offset = -5.0, Scale = 35.0 }, 
+        new() { Name = "雪花4", Key = "IconSnow4", Offset = 5.0, Scale = 35.0 }
+    };
+    
     // 保存用户选择
     private static void SaveUserChoice(string choice)
     {
