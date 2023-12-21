@@ -19,7 +19,7 @@ public partial class MainWindow
 {
     private readonly List<Snowflake> _snowflakes = new();
     private readonly DispatcherTimer _timer = new();
-    private const int SnowflakeCount = 60;
+    private const int SnowflakeCount = 100;
     private readonly Random _random = new();
     private float _scaleFactor = 1.0f;
 
@@ -74,7 +74,7 @@ public partial class MainWindow
         var snowflake = new Path
         {
             Width = size,
-            Height = size + _selectedOffset,
+            Height = size + (size / _selectedScale) * _selectedOffset,
             Fill = System.Windows.Media.Brushes.White,
             Data = _selectedSnow,
             Stretch = Stretch.Fill
@@ -249,7 +249,7 @@ public partial class MainWindow
     
     private Geometry _selectedSnow = new EllipseGeometry(new Point(50, 50), 40, 40); // 圆心(50,50) 半径40
     private double _selectedOffset = 5.0;
-    private double _selectedScale = 15.0;
+    private double _selectedScale = 20.0;
 
     private readonly SnowShape[] _snowShapes = {
         new() { Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 20.0}, 
