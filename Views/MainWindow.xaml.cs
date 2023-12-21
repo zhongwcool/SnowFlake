@@ -19,7 +19,7 @@ public partial class MainWindow
 {
     private readonly List<Snowflake> _snowflakes = new();
     private readonly DispatcherTimer _timer = new();
-    private const int SnowflakeCount = 100;
+    private const int SnowflakeCount = 60;
     private readonly Random _random = new();
     private float _scaleFactor = 1.0f;
 
@@ -57,7 +57,7 @@ public partial class MainWindow
 
     private void InitializeSnowfall()
     {
-        _timer.Interval = TimeSpan.FromMilliseconds(20);
+        _timer.Interval = TimeSpan.FromMilliseconds(30);
         _timer.Tick += MoveSnowflakes;
         _timer.Start();
 
@@ -252,7 +252,7 @@ public partial class MainWindow
     private double _selectedScale = 15.0;
 
     private readonly SnowShape[] _snowShapes = {
-        new() { Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 15.0}, 
+        new() { Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 20.0}, 
         new() { Name = "雪花1", Key = "IconSnow1", Offset = 5.0, Scale = 35.0}, 
         new() { Name = "雪花2", Key = "IconSnow2", Offset = 5.0, Scale = 35.0 }, 
         new() { Name = "雪花3", Key = "IconSnow3", Offset = -5.0, Scale = 35.0 }, 
