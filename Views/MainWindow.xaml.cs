@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
+using Mar.Cheese;
 using SnowFlake.Models;
 using SnowFlake.Utils;
 using Application = System.Windows.Application;
@@ -26,6 +27,8 @@ public partial class MainWindow
     public MainWindow()
     {
         InitializeComponent();
+        Prepare();
+        
         Loaded += MainWindow_Loaded;
         SourceInitialized += MainWindow_SourceInitialized;
         
@@ -164,23 +167,23 @@ public partial class MainWindow
         _menuSnow = new ContextMenuStrip();
         var subOption1 = new ToolStripMenuItem(_snowShapes[1].Name);
         subOption1.CheckOnClick = true;
-        subOption1.Click += SubOption_Click;
+        subOption1.Click += OptionShape_Click;
 
         var subOption2 = new ToolStripMenuItem(_snowShapes[2].Name);
         subOption2.CheckOnClick = true;
-        subOption2.Click += SubOption_Click;
+        subOption2.Click += OptionShape_Click;
         
         var subOption3 = new ToolStripMenuItem(_snowShapes[3].Name);
         subOption3.CheckOnClick = true;
-        subOption3.Click += SubOption_Click;
+        subOption3.Click += OptionShape_Click;
         
         var subOption4 = new ToolStripMenuItem(_snowShapes[4].Name);
         subOption4.CheckOnClick = true;
-        subOption4.Click += SubOption_Click;
+        subOption4.Click += OptionShape_Click;
         
         var subOption0 = new ToolStripMenuItem(_snowShapes[0].Name);
         subOption0.CheckOnClick = true;
-        subOption0.Click += SubOption_Click;
+        subOption0.Click += OptionShape_Click;
 
         _menuSnow.Items.AddRange(new ToolStripItem[] { subOption0, subOption1, subOption2, subOption3, subOption4 });
         mainMenuItem.DropDown = _menuSnow;
@@ -193,8 +196,8 @@ public partial class MainWindow
 
         _trayIcon.ContextMenuStrip = trayMenu;
         
-        var userChoice = ReadUserChoice();
-        if (string.IsNullOrEmpty(userChoice))
+        var shapeName = GetShapeName(_config.Shape);
+        if (string.IsNullOrEmpty(shapeName))
         {
             subOption0.Checked = true;
             subOption0.PerformClick();
@@ -203,7 +206,7 @@ public partial class MainWindow
         {
             foreach (ToolStripMenuItem item in _menuSnow.Items)
             {
-                if (item.Text == userChoice)
+                if (item.Text == shapeName)
                 {
                     item.Checked = true;
                     item.PerformClick();
@@ -214,7 +217,7 @@ public partial class MainWindow
     }
     
     // 单选逻辑
-    private void SubOption_Click(object sender, EventArgs e)
+    private void OptionShape_Click(object sender, EventArgs e)
     {
         // 处理UI
         foreach (ToolStripMenuItem item in _menuSnow.Items)
@@ -224,7 +227,8 @@ public partial class MainWindow
 
         var clickedItem = (ToolStripMenuItem)sender;
         clickedItem.Checked = true;
-        SaveUserChoice(clickedItem.Text);
+        _config.Shape = GetShapeIndex(clickedItem.Text);
+        SaveUserChoice();
         
         // 根据用户选择，更新雪花样式
         foreach (var snowShape in _snowShapes)
@@ -252,32 +256,54 @@ public partial class MainWindow
     private double _selectedScale = 20.0;
 
     private readonly SnowShape[] _snowShapes = {
-        new() { Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 20.0}, 
-        new() { Name = "雪花1", Key = "IconSnow1", Offset = 5.0, Scale = 35.0}, 
-        new() { Name = "雪花2", Key = "IconSnow2", Offset = 5.0, Scale = 35.0 }, 
-        new() { Name = "雪花3", Key = "IconSnow3", Offset = -5.0, Scale = 35.0 }, 
-        new() { Name = "雪花4", Key = "IconSnow4", Offset = 5.0, Scale = 35.0 }
+        new() { Index = 0, Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 20.0}, 
+        new() { Index = 1, Name = "雪花1", Key = "IconSnow1", Offset = 5.0, Scale = 35.0}, 
+        new() { Index = 2, Name = "雪花2", Key = "IconSnow2", Offset = 5.0, Scale = 35.0 }, 
+        new() { Index = 3, Name = "雪花3", Key = "IconSnow3", Offset = -5.0, Scale = 35.0 }, 
+        new() { Index = 4, Name = "雪花4", Key = "IconSnow4", Offset = 5.0, Scale = 35.0 }
     };
+
+    private int GetShapeIndex(string name)
+    {
+        return (from snowShape in _snowShapes where snowShape.Name == name select snowShape.Index).FirstOrDefault();
+    }
+    
+    private string? GetShapeName(int index)
+    {
+        return (from snowShape in _snowShapes where snowShape.Index == index select snowShape.Name).FirstOrDefault();
+    }
     
     // 保存用户选择
-    private static void SaveUserChoice(string choice)
+    private void SaveUserChoice()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
         Directory.CreateDirectory(myAppFolder);
-        File.WriteAllText(System.IO.Path.Combine(myAppFolder, "userChoice.txt"), choice);
+        var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
+        JsonUtil.Save(jsonFile, _config);
     }
 
     // 读取用户选择
-    private static string ReadUserChoice()
+    private void Prepare()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
-        var userChoicePath = System.IO.Path.Combine(myAppFolder, "userChoice.txt");
-
-        if (File.Exists(userChoicePath)) return File.ReadAllText(userChoicePath);
-        return null;
+        var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
+        
+        try
+        {
+            var model = JsonUtil.Load<MyApp>(jsonFile);
+            if (model == null) return;
+            _config = model;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
+    
+    private MyApp _config = new();
+    private const string JsonFile = "app.json";
 
     private void OnTrayIconAboutClicked(object sender, EventArgs e)
     {
