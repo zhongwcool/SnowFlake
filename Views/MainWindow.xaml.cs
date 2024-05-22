@@ -28,10 +28,10 @@ public partial class MainWindow
     {
         InitializeComponent();
         Prepare();
-        
+
         Loaded += MainWindow_Loaded;
         SourceInitialized += MainWindow_SourceInitialized;
-        
+
         // 设置窗口大小覆盖所有屏幕
         SetWindowToCoverAllScreens();
 
@@ -43,7 +43,7 @@ public partial class MainWindow
     {
         var (dpiX, dpiY) = DpiUtil.GetDpi(this);
         _scaleFactor = (float)dpiX / 96.0f; // 96 DPI is the standard DPI for Windows
-        
+
         // 初始化雪花
         InitializeSnowfall();
         // 摆放雪人
@@ -104,13 +104,14 @@ public partial class MainWindow
             if (top > SnowCanvas.ActualHeight)
             {
                 Canvas.SetTop(snowflake.Shape, -snowflake.Shape.Height);
-                Canvas.SetLeft(snowflake.Shape, _random.NextDouble() * (SnowCanvas.ActualWidth - snowflake.Shape.Width));
+                Canvas.SetLeft(snowflake.Shape,
+                    _random.NextDouble() * (SnowCanvas.ActualWidth - snowflake.Shape.Width));
             }
             else
             {
                 Canvas.SetTop(snowflake.Shape, top);
             }
-            
+
             // 旋转雪花
             if (snowflake.Shape.RenderTransform is RotateTransform rotateTransform)
             {
@@ -123,20 +124,20 @@ public partial class MainWindow
             }
         }
     }
-    
+
     #region 鼠标穿透
-    
+
     // 导入 Windows API
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
     [DllImport("user32.dll")]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-    
+
     // 常量定义
     private const int GWL_EXSTYLE = -20;
     private const int WS_EX_TRANSPARENT = 0x20;
-    
+
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
     {
         // 获取当前窗口句柄
@@ -144,9 +145,9 @@ public partial class MainWindow
         // 设置窗口样式为透明
         SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_TRANSPARENT);
     }
-    
+
     #endregion
-    
+
     #region 托盘功能区
 
     // 初始化托盘菜单
@@ -154,11 +155,12 @@ public partial class MainWindow
     {
         // 创建托盘图标
         _trayIcon = new NotifyIcon();
-        var iconStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/ico_notify.ico"))?.Stream;
+        var iconStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/ico_notify.ico"))
+            ?.Stream;
         _trayIcon.Icon = new Icon(iconStream!);
         _trayIcon.Text = "Let it snow";
         _trayIcon.Visible = true;
-        
+
         // 菜单-雪花样式
         var trayMenu = new ContextMenuStrip();
         var mainMenuItem = new ToolStripMenuItem("样式");
@@ -172,15 +174,15 @@ public partial class MainWindow
         var subOption2 = new ToolStripMenuItem(_snowShapes[2].Name);
         subOption2.CheckOnClick = true;
         subOption2.Click += OptionShape_Click;
-        
+
         var subOption3 = new ToolStripMenuItem(_snowShapes[3].Name);
         subOption3.CheckOnClick = true;
         subOption3.Click += OptionShape_Click;
-        
+
         var subOption4 = new ToolStripMenuItem(_snowShapes[4].Name);
         subOption4.CheckOnClick = true;
         subOption4.Click += OptionShape_Click;
-        
+
         var subOption0 = new ToolStripMenuItem(_snowShapes[0].Name);
         subOption0.CheckOnClick = true;
         subOption0.Click += OptionShape_Click;
@@ -189,13 +191,13 @@ public partial class MainWindow
         mainMenuItem.DropDown = _menuSnow;
 
         trayMenu.Items.Add(mainMenuItem);
-        
+
         trayMenu.Items.Add("关于", null, OnTrayIconAboutClicked);
         trayMenu.Items.Add("反馈", null, OnTrayIconTouchClicked);
         trayMenu.Items.Add("退出", null, OnTrayIconExitClicked);
 
         _trayIcon.ContextMenuStrip = trayMenu;
-        
+
         var shapeName = GetShapeName(_config.Shape);
         if (string.IsNullOrEmpty(shapeName))
         {
@@ -215,7 +217,7 @@ public partial class MainWindow
             }
         }
     }
-    
+
     // 单选逻辑
     private void OptionShape_Click(object sender, EventArgs e)
     {
@@ -229,7 +231,7 @@ public partial class MainWindow
         clickedItem.Checked = true;
         _config.Shape = GetShapeIndex(clickedItem.Text);
         SaveUserChoice();
-        
+
         // 根据用户选择，更新雪花样式
         foreach (var snowShape in _snowShapes)
         {
@@ -241,7 +243,7 @@ public partial class MainWindow
                 break;
             }
         }
-        
+
         // 重新生成雪花
         SnowCanvas.Children.Clear();
         _snowflakes.Clear();
@@ -250,16 +252,17 @@ public partial class MainWindow
             CreateSnowflake();
         }
     }
-    
+
     private Geometry _selectedSnow = new EllipseGeometry(new Point(50, 50), 40, 40); // 圆心(50,50) 半径40
     private double _selectedOffset = 5.0;
     private double _selectedScale = 20.0;
 
-    private readonly SnowShape[] _snowShapes = {
-        new() { Index = 0, Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 20.0}, 
-        new() { Index = 1, Name = "雪花1", Key = "IconSnow1", Offset = 5.0, Scale = 35.0}, 
-        new() { Index = 2, Name = "雪花2", Key = "IconSnow2", Offset = 5.0, Scale = 35.0 }, 
-        new() { Index = 3, Name = "雪花3", Key = "IconSnow3", Offset = -5.0, Scale = 35.0 }, 
+    private readonly SnowShape[] _snowShapes =
+    {
+        new() { Index = 0, Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 20.0 },
+        new() { Index = 1, Name = "雪花1", Key = "IconSnow1", Offset = 5.0, Scale = 35.0 },
+        new() { Index = 2, Name = "雪花2", Key = "IconSnow2", Offset = 5.0, Scale = 35.0 },
+        new() { Index = 3, Name = "雪花3", Key = "IconSnow3", Offset = -5.0, Scale = 35.0 },
         new() { Index = 4, Name = "雪花4", Key = "IconSnow4", Offset = 5.0, Scale = 35.0 }
     };
 
@@ -267,17 +270,18 @@ public partial class MainWindow
     {
         return (from snowShape in _snowShapes where snowShape.Name == name select snowShape.Index).FirstOrDefault();
     }
-    
+
     private string? GetShapeName(int index)
     {
         return (from snowShape in _snowShapes where snowShape.Index == index select snowShape.Name).FirstOrDefault();
     }
-    
+
     // 保存用户选择
     private void SaveUserChoice()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
+        var assembly = Assembly.GetEntryAssembly()?.GetName();
+        var myAppFolder = System.IO.Path.Combine(appDataPath, null == assembly ? "SnowFlake" : assembly.Name);
         Directory.CreateDirectory(myAppFolder);
         var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
         JsonUtil.Save(jsonFile, _config);
@@ -287,9 +291,10 @@ public partial class MainWindow
     private void Prepare()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
+        var assembly = Assembly.GetEntryAssembly()?.GetName();
+        var myAppFolder = System.IO.Path.Combine(appDataPath, null == assembly ? "SnowFlake" : assembly.Name);
         var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
-        
+
         try
         {
             var model = JsonUtil.Load<MyApp>(jsonFile);
@@ -301,7 +306,7 @@ public partial class MainWindow
             Console.WriteLine(e);
         }
     }
-    
+
     private MyApp _config = new();
     private const string JsonFile = "app.json";
 
@@ -326,7 +331,7 @@ public partial class MainWindow
         _trayIcon.Visible = false;
         Application.Current.Shutdown();
     }
-    
+
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
@@ -336,14 +341,14 @@ public partial class MainWindow
     #endregion
 
     #region 获得任务栏高度以摆放雪人
-    
+
     private void PlaceTheSnowman()
     {
         // 获取任务栏高度，兼容多屏幕的情况
         var taskBarHeight = GetTaskBarHeight();
         SnowMan.Margin = new Thickness(20, 0, 20, taskBarHeight / _scaleFactor);
     }
-    
+
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool SystemParametersInfo(uint uiAction, uint uiParam, ref Rect pvParam, uint fWinIni);
