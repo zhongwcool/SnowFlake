@@ -2,23 +2,25 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net481</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UseWPF>True</UseWPF>
-        <ApplicationIcon>Resources\ico_notify.ico</ApplicationIcon>
+        <ApplicationIcon>Resources\main.ico</ApplicationIcon>
 		<UseWindowsForms>true</UseWindowsForms>
 		<Company>Zhong Alex</Company>
 		<Product>Let it snow</Product>
         <PackageReadmeFile>README.md</PackageReadmeFile>
-		<LangVersion>10</LangVersion>
+        <LangVersion>12</LangVersion>
 		<AssemblyVersion>0.4.0</AssemblyVersion>
 		<FileVersion>0.4.0</FileVersion>
+        <TargetFrameworks>net481;net8.0-windows</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
       <None Remove="Resources\ico_notify.ico" />
-      <Resource Include="Resources\ico_notify.ico" />
+        <Resource Include="Resources\Light\notify.ico"/>
+        <None Remove="Resources\Dark\notify.ico"/>
+        <Resource Include="Resources\Dark\notify.ico"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -29,7 +31,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Mar.Console" Version="0.6.3" />
+        <PackageReference Include="Mar.Console" Version="0.6.8"/>
     </ItemGroup>
 
 </Project>
