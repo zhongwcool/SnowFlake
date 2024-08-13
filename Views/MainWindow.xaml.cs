@@ -331,7 +331,7 @@ public partial class MainWindow
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var assembly = Assembly.GetEntryAssembly()?.GetName();
-        var myAppFolder = System.IO.Path.Combine(appDataPath, null == assembly ? "SnowFlake" : assembly.Name);
+        var myAppFolder = System.IO.Path.Combine(appDataPath, assembly?.Name!);
         Directory.CreateDirectory(myAppFolder);
         var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
         JsonUtil.Save(jsonFile, _config);
@@ -342,7 +342,7 @@ public partial class MainWindow
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var assembly = Assembly.GetEntryAssembly()?.GetName();
-        var myAppFolder = System.IO.Path.Combine(appDataPath, null == assembly ? "SnowFlake" : assembly.Name);
+        var myAppFolder = System.IO.Path.Combine(appDataPath, assembly?.Name!);
         var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
 
         try
