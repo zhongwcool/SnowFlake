@@ -330,7 +330,8 @@ public partial class MainWindow
     private void SaveUserChoice()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
+        var assembly = Assembly.GetEntryAssembly()?.GetName();
+        var myAppFolder = System.IO.Path.Combine(appDataPath, null == assembly ? "SnowFlake" : assembly.Name);
         Directory.CreateDirectory(myAppFolder);
         var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
         JsonUtil.Save(jsonFile, _config);
@@ -340,7 +341,8 @@ public partial class MainWindow
     private void Prepare()
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var myAppFolder = System.IO.Path.Combine(appDataPath, "SnowFlake");
+        var assembly = Assembly.GetEntryAssembly()?.GetName();
+        var myAppFolder = System.IO.Path.Combine(appDataPath, null == assembly ? "SnowFlake" : assembly.Name);
         var jsonFile = System.IO.Path.Combine(myAppFolder, JsonFile);
 
         try
