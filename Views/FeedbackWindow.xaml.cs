@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Net;
-using System.Net.Mail;
-using System.Text;
+﻿using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using Mar.Cheese;
@@ -46,7 +43,7 @@ public partial class FeedbackWindow : Window
         {
             builder.Append(task.Result);
             var body = builder.ToString();
-            SendEmail("zhongw@uwv-tech.com", $"用户反馈-{timestamp}", body);
+            SendEmail("zhongwcool@163.com", $"用户反馈-{timestamp}", body);
             // 这里处理提交逻辑，例如保存反馈信息
             MessageBox.Show("反馈已提交！");
             Dispatcher.Invoke(Close);
@@ -55,7 +52,7 @@ public partial class FeedbackWindow : Window
 
     private static void SendEmail(string to, string subject, string body)
     {
-        var task = EmailUtil.SendEmail("2872700763@qq.com", to, subject, body,
+        var task = EmailUtil.SendEmailAsync("2872700763@qq.com", to, subject, body,
             "smtp.qq.com", 587, "2872700763", "utyydjctjirrdfgc"
         );
 

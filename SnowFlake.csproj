@@ -31,7 +31,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Mar.Console" Version="0.6.8"/>
+        <PackageReference Include="Mar.Console" Version="0.8.1"/>
     </ItemGroup>
 
 </Project>

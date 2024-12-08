@@ -11,6 +11,7 @@ using Microsoft.Win32;
 using SnowFlake.Models;
 using SnowFlake.Utils;
 using Application = System.Windows.Application;
+using Brushes = System.Windows.Media.Brushes;
 using MessageBox = System.Windows.MessageBox;
 using Path = System.Windows.Shapes.Path;
 using Point = System.Windows.Point;
@@ -20,7 +21,7 @@ namespace SnowFlake.Views;
 public partial class MainWindow
 {
     private readonly List<Snowflake> _snowflakes = new();
-    private readonly DispatcherTimer _timer = new();
+    private readonly DispatcherTimer _moveTimer = new();
     private const int SnowflakeCount = 100;
     private readonly Random _random = new();
     private float _scaleFactor = 1.0f;
@@ -73,9 +74,9 @@ public partial class MainWindow
 
     private void InitializeSnowfall()
     {
-        _timer.Interval = TimeSpan.FromMilliseconds(30);
-        _timer.Tick += MoveSnowflakes;
-        _timer.Start();
+        _moveTimer.Interval = TimeSpan.FromMilliseconds(30);
+        _moveTimer.Tick += MoveSnowflakes;
+        _moveTimer.Start();
 
         for (var i = 0; i < SnowflakeCount; i++)
         {
@@ -91,7 +92,7 @@ public partial class MainWindow
         {
             Width = size,
             Height = size + (size / _selectedScale) * _selectedOffset,
-            Fill = System.Windows.Media.Brushes.White,
+            Fill = Brushes.White,
             Data = _selectedSnow,
             Stretch = Stretch.Fill
         };
@@ -191,7 +192,7 @@ public partial class MainWindow
         const string registryKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
         const string registryValueName = "AppsUseLightTheme";
 
-        using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(registryKeyPath);
+        using var key = Registry.CurrentUser.OpenSubKey(registryKeyPath);
         var registryValueObject = key?.GetValue(registryValueName)!;
 
         var registryValue = (int?)registryValueObject;
@@ -237,7 +238,7 @@ public partial class MainWindow
         subOption0.CheckOnClick = true;
         subOption0.Click += OptionShape_Click;
 
-        _menuSnow.Items.AddRange(new ToolStripItem[] { subOption0, subOption1, subOption2, subOption3, subOption4 });
+        _menuSnow.Items.AddRange([subOption0, subOption1, subOption2, subOption3, subOption4]);
         mainMenuItem.DropDown = _menuSnow;
 
         trayMenu.Items.Add(mainMenuItem);
@@ -308,13 +309,13 @@ public partial class MainWindow
     private double _selectedScale = 20.0;
 
     private readonly SnowShape[] _snowShapes =
-    {
+    [
         new() { Index = 0, Name = "波点", Key = "IconSnow0", Offset = 0.0, Scale = 20.0 },
         new() { Index = 1, Name = "雪花1", Key = "IconSnow1", Offset = 5.0, Scale = 35.0 },
         new() { Index = 2, Name = "雪花2", Key = "IconSnow2", Offset = 5.0, Scale = 35.0 },
         new() { Index = 3, Name = "雪花3", Key = "IconSnow3", Offset = -5.0, Scale = 35.0 },
         new() { Index = 4, Name = "雪花4", Key = "IconSnow4", Offset = 5.0, Scale = 35.0 }
-    };
+    ];
 
     private int GetShapeIndex(string name)
     {
