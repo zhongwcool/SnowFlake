@@ -13,7 +13,7 @@
         <LangVersion>12</LangVersion>
 		<AssemblyVersion>0.4.0</AssemblyVersion>
 		<FileVersion>0.4.0</FileVersion>
-        <TargetFrameworks>net481;net8.0-windows</TargetFrameworks>
+        <TargetFramework>net8.0-windows</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>

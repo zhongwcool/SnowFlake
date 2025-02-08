@@ -1,11 +1,11 @@
-﻿using System.IO;
+﻿using System.ComponentModel;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Mar.Cheese;
 using Microsoft.Win32;
 using SnowFlake.Models;
@@ -21,10 +21,10 @@ namespace SnowFlake.Views;
 public partial class MainWindow
 {
     private readonly List<Snowflake> _snowflakes = new();
-    private readonly DispatcherTimer _moveTimer = new();
     private const int SnowflakeCount = 100;
     private readonly Random _random = new();
     private float _scaleFactor = 1.0f;
+    private DateTime _lastRenderTime = DateTime.Now;
 
     public MainWindow()
     {
@@ -55,13 +55,27 @@ public partial class MainWindow
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        // 获取DPI缩放
         var (dpiX, dpiY) = DpiUtil.GetDpi(this);
-        _scaleFactor = (float)dpiX / 96.0f; // 96 DPI is the standard DPI for Windows
+        var dpiScale = (float)dpiX / 96.0f; // 96 DPI is the standard DPI for Windows
+
+        // 获取分辨率缩放（相对于1080p）
+        var resolutionScale = (float)(SystemParameters.PrimaryScreenHeight / 1080.0);
+
+        // 综合考虑DPI和分辨率的缩放因子
+        _scaleFactor = dpiScale * resolutionScale;
 
         // 初始化雪花
         InitializeSnowfall();
         // 摆放雪人
         PlaceTheSnowman();
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        CompositionTarget.Rendering -= MoveSnowflakes;
+        base.OnClosed(e);
+        _trayIcon.Dispose();
     }
 
     private void SetWindowToCoverAllScreens()
@@ -74,9 +88,8 @@ public partial class MainWindow
 
     private void InitializeSnowfall()
     {
-        _moveTimer.Interval = TimeSpan.FromMilliseconds(30);
-        _moveTimer.Tick += MoveSnowflakes;
-        _moveTimer.Start();
+        // 使用 CompositionTarget.Rendering 替代 DispatcherTimer
+        CompositionTarget.Rendering += MoveSnowflakes;
 
         for (var i = 0; i < SnowflakeCount; i++)
         {
@@ -86,9 +99,16 @@ public partial class MainWindow
 
     private void CreateSnowflake()
     {
-        var size = _random.NextDouble() * (_selectedScale - 5.0) + 5.0;
-        size *= _scaleFactor;
-        var snowflake = new Path
+        // 基础大小范围：5.0 到 _selectedScale
+        // 在1080p下保持原有大小，在更高分辨率下按比例缩放
+        var minSize = 5.0;
+        var maxSize = _selectedScale;
+        var baseSize = _random.NextDouble() * (maxSize - minSize) + minSize;
+
+        // 应用DPI缩放
+        var size = baseSize * _scaleFactor;
+
+        var snowShape = new Path
         {
             Width = size,
             Height = size + (size / _selectedScale) * _selectedOffset,
@@ -97,24 +117,49 @@ public partial class MainWindow
             Stretch = Stretch.Fill
         };
 
-        Canvas.SetLeft(snowflake, _random.NextDouble() * (this.Width - size));
-        Canvas.SetTop(snowflake, -size);
+        Canvas.SetLeft(snowShape, _random.NextDouble() * (this.Width - size));
+        Canvas.SetTop(snowShape, -size);
+
+        // 降低速度范围：1.0 到 2.5
+        var minVelocity = 1.0;
+        var maxVelocity = 2.5;
+        var baseVelocity = _random.NextDouble() * (maxVelocity - minVelocity) + minVelocity;
+
+        // 降低旋转速度范围：1.0 到 2.5
+        var minRotation = 1.0;
+        var maxRotation = 2.5;
+        var baseRotationSpeed = _random.NextDouble() * (maxRotation - minRotation) + minRotation;
+
+        // 预先创建和缓存 RotateTransform
+        var rotateTransform = new RotateTransform(0);
+        snowShape.RenderTransform = rotateTransform;
+        snowShape.RenderTransformOrigin = new Point(0.5, 0.5);
 
         _snowflakes.Add(new Snowflake
         {
-            Shape = snowflake,
-            Velocity = _random.NextDouble() * (5.0 - 2.0) + 2.0,
-            RtSpeed = _random.NextDouble() * (5.0 - 2.0) + 2.0
+            Shape = snowShape,
+            // 在高分辨率下降低速度，使用DPI比例的平方根来使动画更自然
+            Velocity = baseVelocity / Math.Sqrt(_scaleFactor),
+            RtSpeed = baseRotationSpeed / Math.Sqrt(_scaleFactor),
+            Transform = rotateTransform // 保存 Transform 引用
         });
 
-        SnowCanvas.Children.Add(snowflake);
+        SnowCanvas.Children.Add(snowShape);
     }
 
     private void MoveSnowflakes(object? sender, EventArgs e)
     {
+        var currentTime = DateTime.Now;
+        var deltaTime = (currentTime - _lastRenderTime).TotalSeconds;
+        _lastRenderTime = currentTime;
+
+        // 批量更新开始
+        SnowCanvas.BeginInit();
+
         foreach (var snowflake in _snowflakes)
         {
-            var top = Canvas.GetTop(snowflake.Shape) + snowflake.Velocity;
+            // 使用 deltaTime 来计算位移，使动画更平滑
+            var top = Canvas.GetTop(snowflake.Shape) + snowflake.Velocity * deltaTime * 60; // 乘以60使速度与60fps时相同
             if (top > SnowCanvas.ActualHeight)
             {
                 Canvas.SetTop(snowflake.Shape, -snowflake.Shape.Height);
@@ -126,17 +171,12 @@ public partial class MainWindow
                 Canvas.SetTop(snowflake.Shape, top);
             }
 
-            // 旋转雪花
-            if (snowflake.Shape.RenderTransform is RotateTransform rotateTransform)
-            {
-                rotateTransform.Angle = (rotateTransform.Angle + snowflake.RtSpeed) % 360;
-            }
-            else
-            {
-                snowflake.Shape.RenderTransform = new RotateTransform(snowflake.RtSpeed);
-                snowflake.Shape.RenderTransformOrigin = new Point(0.5, 0.5); // 将旋转中心设置为形状的中心
-            }
+            // 使用 deltaTime 来计算旋转角度
+            snowflake.Transform.Angle = (snowflake.Transform.Angle + snowflake.RtSpeed * deltaTime * 60) % 360;
         }
+
+        // 批量更新结束
+        SnowCanvas.EndInit();
     }
 
     #region 鼠标穿透
